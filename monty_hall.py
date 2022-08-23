@@ -6,8 +6,8 @@ import matplotlib.backends.backend_agg as agg
 matplotlib.use("Agg")
 
 import os 
-#os.chdir(r"/home/ted/Desktop/monty_hall")
-os.chdir(r"C:\Users\theodore-tinker\Desktop\monty_hall")
+os.chdir(r"/home/ted/Desktop/monty_hall")
+#os.chdir(r"C:\Users\theodore-tinker\Desktop\monty_hall")
 
 import pygame
 
@@ -17,6 +17,7 @@ d2   = pygame.image.load('images/door_2.png')
 d3   = pygame.image.load('images/door_3.png')
 goat = pygame.image.load('images/goat.png')
 car  = pygame.image.load('images/car.png')
+auto = pygame.image.load('images/auto.png')
 
 pygame.init()
 screen = pygame.display.set_mode([bg.get_rect()[2], bg.get_rect()[3]])
@@ -39,6 +40,12 @@ def door_click(pos):
         if(pos[0] >= 929 and pos[0] <= 1267): return(3)
     return(None)
 
+def auto_click(pos):
+    if(pos[1] >= 500 and pos[1] <= 735):
+        if(pos[0] >= 1300 and pos[0] <= 1420):
+            return(True)      
+    return(False)
+
 def door_state(d1_state = "closed", d2_state = "closed", d3_state = "closed"):
     screen.blit(bg, (0, 0))
     
@@ -54,11 +61,14 @@ def door_state(d1_state = "closed", d2_state = "closed", d3_state = "closed"):
     if(d2_state == "car"): screen.blit(car, (631, 180))
     if(d3_state == "car"): screen.blit(car, (989, 180))
     
+    screen.blit(auto, (1300, 500))
+    
 
 
 step = "start"
 games = 0 ; switch_wins = 0 ; stay_wins = 0 ; switch_win_probs = []
 car_door = choice([1,2,3]) ; door_options = [1,2,3] ; door_choice = None
+auto_clicking = False ; clicks = 0 ; max_clicks = 100
     
 running = True
 while running:
@@ -67,6 +77,8 @@ while running:
     for event in events:
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.MOUSEBUTTONUP and not auto_clicking:
+            auto_clicking = auto_click(pygame.mouse.get_pos())
     
     if(step == "start"):
         car_door = choice([1,2,3])
@@ -77,6 +89,9 @@ while running:
         step = "wait_1" ; end_step = True
     
     if(step == "wait_1"):
+        if(auto_clicking): 
+            door_choice = 1 
+            step = "open_1" ; end_step = True
         for event in events:
             if(end_step): break
             if event.type == pygame.MOUSEBUTTONUP:
@@ -98,6 +113,10 @@ while running:
         step = "wait_2" ; end_step = True
         
     if(step == "wait_2"):
+        if(auto_clicking): 
+            door_choice = 1 
+            switched = door_choice != prev_door
+            step = "open_2" ; end_step = True
         for event in events:
             if(end_step): break
             if event.type == pygame.MOUSEBUTTONUP:
@@ -112,7 +131,7 @@ while running:
             "goat" if alt_door == 1 or (door_choice == 1 and car_door != 1) else "car" if (door_choice == 1 and car_door == 1) else "closed", 
             "goat" if alt_door == 2 or (door_choice == 2 and car_door != 2) else "car" if (door_choice == 2 and car_door == 2) else "closed", 
             "goat" if alt_door == 3 or (door_choice == 3 and car_door != 3) else "car" if (door_choice == 3 and car_door == 3) else "closed", )
-        put_text("Behind door {}: {}!          Click to see graph.".format(
+        put_text("Behind door {}: {}! Click to see graph.".format(
             door_choice, "car" if door_choice == car_door else "goat"))
         games += 1
         switch_wins += 1 if (switched and door_choice == car_door) or (not switched and door_choice != car_door) else 0
@@ -121,6 +140,8 @@ while running:
         step = "wait_3" ; end_step = True
         
     if(step == "wait_3"):
+        if(auto_clicking): 
+            step = "graph" ; end_step = True
         for event in events:
             if(end_step): break
             if event.type == pygame.MOUSEBUTTONUP:
@@ -158,12 +179,20 @@ while running:
         step = "wait_4" ; end_step = True
         
     if(step == "wait_4"):
+        if(auto_clicking): 
+            plt.close()
+            step = "start" ; end_step = True
         for event in events:
             if(end_step): break
             if event.type == pygame.MOUSEBUTTONUP:
                 plt.close()
                 step = "start" ; end_step = True
-                
+    
+    if(auto_clicking):
+        clicks += 1
+        if(clicks >= max_clicks):
+            auto_clicking = False 
+            clicks = 0
     pygame.display.flip()
 pygame.quit()
 # %%
