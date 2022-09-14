@@ -5,10 +5,6 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_agg as agg
 matplotlib.use("Agg")
 
-import os 
-os.chdir(r"/home/ted/Desktop/monty_hall")
-#os.chdir(r"C:\Users\theodore-tinker\Desktop\monty_hall")
-
 import pygame
 
 bg   = pygame.image.load('images/background.png')
